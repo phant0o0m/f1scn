@@ -79,8 +79,8 @@ function normalizeRace(payload) {
     results: results
       .map((entry) => {
         const isDnf = entry?.retired !== null && entry?.retired !== undefined && entry?.retired !== "";
-        const status = isDnf ? `DNF${entry.retired ? ` (${entry.retired})` : ""}` : "Finished";
         const timeValue = isDnf ? "DNF" : firstDefined(entry?.time, "N/A");
+        const status = isDnf ? `DNF${entry.retired ? ` (${entry.retired})` : ""}` : "Finished";
 
         return {
           position: firstDefined(entry?.position, "N/A"),
@@ -89,8 +89,7 @@ function normalizeRace(payload) {
           driver: formatDriverName(entry?.driver),
           team: formatTeamName(entry?.team),
           time: timeValue,
-          status,
-          isDnf
+          status
         };
       })
       .sort((a, b) => Number(a.position) - Number(b.position))
@@ -156,12 +155,15 @@ function renderResults(results) {
     const tr = document.createElement("tr");
 
     const positionCell = document.createElement("td");
+    positionCell.setAttribute("data-label", "Pos");
     positionCell.textContent = String(row.position);
 
     const gridCell = document.createElement("td");
+    gridCell.setAttribute("data-label", "Grid");
     gridCell.textContent = String(row.grid);
 
     const deltaCell = document.createElement("td");
+    deltaCell.setAttribute("data-label", "Delta Pos");
     const gridNum = Number(row.grid);
     const posNum = Number(row.position);
     if (Number.isFinite(gridNum) && Number.isFinite(posNum)) {
@@ -178,20 +180,25 @@ function renderResults(results) {
     }
 
     const pointsCell = document.createElement("td");
+    pointsCell.setAttribute("data-label", "Pts");
     pointsCell.textContent = String(row.points);
 
     const driverCell = document.createElement("td");
+    driverCell.setAttribute("data-label", "Driver");
     driverCell.textContent = row.driver;
 
     const teamCell = document.createElement("td");
+    teamCell.setAttribute("data-label", "Team");
     teamCell.textContent = row.team;
 
     const timeCell = document.createElement("td");
+    timeCell.setAttribute("data-label", "Time");
     timeCell.textContent = row.time;
 
     const statusCell = document.createElement("td");
+    statusCell.setAttribute("data-label", "Status");
     statusCell.textContent = row.status;
-    if (row.isDnf) {
+    if (row.status.startsWith("DNF")) {
       statusCell.classList.add("status-dnf");
     }
 
