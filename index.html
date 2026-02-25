@@ -14,6 +14,7 @@
         <nav class="top-nav" aria-label="Pages">
           <a class="nav-link active" href="index.html">Next Race</a>
           <a class="nav-link" href="last.html">Last Race</a>
+          <a class="nav-link" href="standings.html">Standings</a>
         </nav>
         <p class="clock" id="localClock">--:--:--</p>
       </div>
@@ -22,13 +23,12 @@
     <section class="terminal-body">
       <div class="scene-grid">
         <section class="panel">
-          <p class="panel-title">[ api nfo dump ]</p>
+          <p class="panel-title">[ .nfo ]</p>
           <pre class="api-nfo" id="apiNfo">Booting parser...</pre>
-          <p class="line" id="statusLine">Initializing uplink...</p>
         </section>
 
         <section class="panel">
-          <p class="panel-title">[ t-minus countdown ]</p>
+          <p class="panel-title">[ countdown ]</p>
           <div class="session-block">
             <p class="session-label">Target Session</p>
             <div class="session-picker" id="sessionPicker">
@@ -53,7 +53,6 @@
               <small>Seconds</small>
             </div>
           </div>
-          <p class="cursor-line"><span class="prompt">root@scene</span>:~$ <span class="cursor"></span></p>
         </section>
       </div>
     </section>

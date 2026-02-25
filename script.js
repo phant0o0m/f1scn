@@ -13,7 +13,6 @@ const SESSION_ORDER = [
 const nodes = {
   apiNfo: document.getElementById("apiNfo"),
   localClock: document.getElementById("localClock"),
-  statusLine: document.getElementById("statusLine"),
   sessionPicker: document.getElementById("sessionPicker"),
   days: document.getElementById("days"),
   hours: document.getElementById("hours"),
@@ -145,6 +144,8 @@ function extractRace(payload) {
     circuitName: firstDefined(race?.circuit?.circuitName, race?.circuit?.name, "N/A"),
     city: firstDefined(race?.circuit?.city, "N/A"),
     country: firstDefined(race?.circuit?.country, "N/A"),
+    circuitLength: firstDefined(race?.circuit?.circuitLength, race?.circuit?.length, "N/A"),
+    corners: firstDefined(race?.circuit?.corners, "N/A"),
     sessions
   };
 }
@@ -163,6 +164,8 @@ function buildRaceNfo(race, session) {
     ` [TARGET ] ${session.label}`,
     ` [SEASON ] ${race.season}   [ROUND] ${race.round}`,
     ` [TRACK  ] ${race.circuitName}`,
+    ` [LENGTH ] ${race.circuitLength}`,
+    ` [CORNERS] ${race.corners}`,
     ` [PLACE  ] ${race.city}, ${race.country}`,
     ` [UTC    ] ${utcStamp}`,
     ` [LOCAL  ] ${localStamp}`
@@ -204,7 +207,6 @@ function renderCountdown(session) {
 
   if (diff <= 0) {
     setCountdownZero();
-    nodes.statusLine.textContent = `${session.label} is live now.`;
     return false;
   }
 
@@ -218,7 +220,6 @@ function renderCountdown(session) {
   nodes.hours.textContent = pad(hours);
   nodes.minutes.textContent = pad(minutes);
   nodes.seconds.textContent = pad(seconds);
-  nodes.statusLine.textContent = `Counting down to ${session.label}...`;
   return true;
 }
 
@@ -251,7 +252,6 @@ function startLocalClock() {
 
 async function init() {
   startLocalClock();
-  nodes.statusLine.textContent = "Fetching next race...";
 
   try {
     state.race = await getNextRace();
@@ -274,7 +274,6 @@ async function init() {
       " [DETAIL ] Check API availability or internet connection.",
       ` [MSG    ] ${error.message}`
     ].join("\n");
-    nodes.statusLine.textContent = `Error: ${error.message}`;
   }
 }
 

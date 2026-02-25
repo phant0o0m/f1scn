@@ -3,7 +3,6 @@ const LAST_RACE_API = "https://f1api.dev/api/current/last/race";
 const nodes = {
   apiNfo: document.getElementById("apiNfo"),
   localClock: document.getElementById("localClock"),
-  statusLine: document.getElementById("statusLine"),
   winnerValue: document.getElementById("winnerValue"),
   teamValue: document.getElementById("teamValue"),
   fastLapValue: document.getElementById("fastLapValue"),
@@ -71,6 +70,8 @@ function normalizeRace(payload) {
     circuitName: firstDefined(race?.circuit?.circuitName, "N/A"),
     city: firstDefined(race?.circuit?.city, "N/A"),
     country: firstDefined(race?.circuit?.country, "N/A"),
+    circuitLength: firstDefined(race?.circuit?.circuitLength, race?.circuit?.length, "N/A"),
+    corners: firstDefined(race?.circuit?.corners, "N/A"),
     raceDate,
     winnerName: formatDriverName(winnerResult?.driver),
     winnerTeam: formatTeamName(winnerResult?.team),
@@ -133,11 +134,11 @@ function buildNfo(race) {
     ` [EVENT  ] ${race.name}`,
     ` [SEASON ] ${race.season}   [ROUND] ${race.round}`,
     ` [TRACK  ] ${race.circuitName}`,
+    ` [LENGTH ] ${race.circuitLength}`,
+    ` [CORNERS] ${race.corners}`,
     ` [PLACE  ] ${race.city}, ${race.country}`,
     ` [RACE   ] ${utcStamp}`,
-    ` [LOCAL  ] ${localStamp}`,
-    ` [WINNER ] ${race.winnerName} (${race.winnerTeam})`,
-    ` [FASTEST] ${race.fastestLap} - ${race.fastestDriver}`
+    ` [LOCAL  ] ${localStamp}`
   ].join("\n");
 }
 
@@ -236,14 +237,12 @@ async function getLastRace() {
 
 async function init() {
   startLocalClock();
-  nodes.statusLine.textContent = "Fetching last race...";
 
   try {
     const race = await getLastRace();
     nodes.apiNfo.textContent = buildNfo(race);
     renderHighlights(race);
     renderResults(race.results);
-    nodes.statusLine.textContent = "Last race data loaded.";
   } catch (error) {
     nodes.resultsBody.innerHTML = '<tr><td colspan="8">Could not load results.</td></tr>';
     nodes.apiNfo.textContent = [
@@ -251,7 +250,6 @@ async function init() {
       " [DETAIL ] Check API availability or internet connection.",
       ` [MSG    ] ${error.message}`
     ].join("\n");
-    nodes.statusLine.textContent = `Error: ${error.message}`;
   }
 }
 

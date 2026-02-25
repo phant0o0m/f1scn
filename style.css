@@ -137,10 +137,6 @@ body {
   overflow-wrap: anywhere;
 }
 
-#statusLine {
-  color: #d5ffe9;
-}
-
 .line {
   margin: 0;
 }
@@ -219,25 +215,6 @@ body {
   font-size: 0.7rem;
 }
 
-.cursor-line {
-  margin: 0.55rem 0 0;
-  color: var(--accent);
-  font-size: 0.78rem;
-}
-
-.prompt {
-  color: var(--accent);
-}
-
-.cursor {
-  display: inline-block;
-  width: 9px;
-  height: 1em;
-  vertical-align: -0.15em;
-  background: #f0fff8;
-  animation: blink 1s steps(1, end) infinite;
-}
-
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -267,6 +244,23 @@ body {
 
 .results-panel {
   margin-top: 0.75rem;
+}
+
+.standings-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.standings-head .panel-title {
+  margin: 0;
+}
+
+.standings-toggle {
+  display: flex;
+  gap: 0.3rem;
 }
 
 .results-wrap {
@@ -309,9 +303,39 @@ body {
   color: #ff9a9a;
 }
 
-@keyframes blink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
+.podium-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.podium-card {
+  border: 1px solid var(--line);
+  background: #08110f;
+  padding: 0.45rem;
+}
+
+.podium-pos {
+  margin: 0 0 0.2rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.podium-driver {
+  margin: 0 0 0.22rem;
+  color: #f0fff8;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.podium-meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+}
+
+.standings-table {
+  min-width: 760px;
 }
 
 @media (max-width: 760px) {
@@ -397,6 +421,26 @@ body {
     grid-template-columns: 1fr;
   }
 
+  .standings-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .standings-toggle {
+    width: 100%;
+  }
+
+  .standings-toggle .session-btn {
+    flex: 1;
+    justify-content: center;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .podium-grid {
+    grid-template-columns: 1fr;
+  }
+
   .results-wrap {
     border: 0;
     background: transparent;
@@ -448,6 +492,12 @@ body {
   .results-table td[data-label="Pts"],
   .results-table td[data-label="Team"],
   .results-table td[data-label="Status"] {
+    display: none;
+  }
+
+  .standings-table td[data-label="Team"],
+  .standings-table td[data-label="Country"],
+  .standings-table td[data-label="Wins"] {
     display: none;
   }
 
