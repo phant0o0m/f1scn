@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F1 Last Race Terminal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="terminal" aria-live="polite">
+    <header class="terminal-header">
+      <p class="title">[ f1.scene ] : last-race intel feed</p>
+      <div class="header-right">
+        <nav class="top-nav" aria-label="Pages">
+          <a class="nav-link" href="index.html">Next Race</a>
+          <a class="nav-link active" href="last.html">Last Race</a>
+        </nav>
+        <p class="clock" id="localClock">--:--:--</p>
+      </div>
+    </header>
+
+    <section class="terminal-body">
+      <div class="scene-grid">
+        <section class="panel">
+          <p class="panel-title">[ last race nfo ]</p>
+          <pre class="api-nfo" id="apiNfo">Loading last race data...</pre>
+          <p class="line" id="statusLine">Connecting to race archive...</p>
+        </section>
+
+        <section class="panel">
+          <p class="panel-title">[ race highlights ]</p>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Winner</span>
+              <span class="stat-value" id="winnerValue">N/A</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Winning Team</span>
+              <span class="stat-value" id="teamValue">N/A</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Fastest Lap</span>
+              <span class="stat-value" id="fastLapValue">N/A</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Fastest Lap Driver</span>
+              <span class="stat-value" id="fastDriverValue">N/A</span>
+            </div>
+          </div>
+          <p class="cursor-line"><span class="prompt">root@scene</span>:~$ <span class="cursor"></span></p>
+        </section>
+      </div>
+
+      <section class="panel results-panel">
+        <p class="panel-title">[ full classification ]</p>
+        <div class="results-wrap">
+          <table class="results-table" aria-label="Race results table">
+            <thead>
+              <tr>
+                <th>Pos</th>
+                <th>Grid</th>
+                <th>Delta Pos</th>
+                <th>Pts</th>
+                <th>Driver</th>
+                <th>Team</th>
+                <th>Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody">
+              <tr>
+                <td colspan="8">Loading results...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="last.js"></script>
+</body>
+</html>
