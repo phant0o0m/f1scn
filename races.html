@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F1 Races Terminal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="terminal" aria-live="polite">
+    <header class="terminal-header">
+      <p class="title">[ f1.scene ] : season races feed</p>
+      <div class="header-right">
+        <nav class="top-nav" aria-label="Pages">
+          <a class="nav-link" href="index.html">Next Race</a>
+          <a class="nav-link" href="last.html">Last Race</a>
+          <a class="nav-link" href="standings.html">Standings</a>
+          <a class="nav-link active" href="races.html">Races</a>
+        </nav>
+        <p class="clock" id="localClock">--:--:--</p>
+      </div>
+    </header>
+
+    <section class="terminal-body">
+      <div class="scene-grid">
+        <section class="panel">
+          <p class="panel-title">[ season nfo ]</p>
+          <pre class="api-nfo" id="apiNfo">Loading season races...</pre>
+        </section>
+
+        <section class="panel">
+          <p class="panel-title">[ season stats ]</p>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">Completed</span>
+              <span class="stat-value" id="seasonValue">N/A</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Remaining</span>
+              <span class="stat-value" id="raceCountValue">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Sprints</span>
+              <span class="stat-value" id="nextRoundValue">N/A</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Tripleheaders</span>
+              <span class="stat-value" id="nextEventValue">N/A</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel results-panel">
+        <p class="panel-title">[ race calendar ]</p>
+        <div class="race-list" id="raceList">
+          <p class="race-empty">Loading races...</p>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="races.js"></script>
+</body>
+</html>

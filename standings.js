@@ -1,5 +1,6 @@
-const DRIVERS_API = "https://f1api.dev/api/current/drivers-championship";
-const CONSTRUCTORS_API = "https://f1api.dev/api/current/constructors-championship";
+const API_BASE = "https://f1api.dev/api";
+const DRIVERS_API = `${API_BASE}/current/drivers-championship`;
+const CONSTRUCTORS_API = `${API_BASE}/current/constructors-championship`;
 
 const nodes = {
   localClock: document.getElementById("localClock"),
@@ -15,7 +16,9 @@ const nodes = {
 const state = {
   mode: "drivers",
   drivers: null,
-  constructors: null
+  constructors: null,
+  modal: null,
+  detailCache: new Map()
 };
 
 function firstDefined(...values) {
@@ -45,7 +48,9 @@ function normalizeDrivers(payload) {
       main: formatDriverName(entry?.driver),
       secondary: firstDefined(entry?.team?.teamName, entry?.team?.name, entry?.teamId, "N/A"),
       points: Number(firstDefined(entry?.points, 0)),
-      wins: Number(firstDefined(entry?.wins, 0))
+      wins: Number(firstDefined(entry?.wins, 0)),
+      driverId: firstDefined(entry?.driverId, entry?.driver?.driverId, null),
+      teamId: firstDefined(entry?.teamId, entry?.team?.teamId, null)
     }))
     .sort((a, b) => a.position - b.position);
 
@@ -68,9 +73,10 @@ function normalizeConstructors(payload) {
     .map((entry) => ({
       position: Number(firstDefined(entry?.position, 999)),
       main: firstDefined(entry?.team?.teamName, entry?.team?.name, entry?.teamId, "N/A"),
-      secondary: firstDefined(entry?.team?.country, "N/A"),
+      secondary: firstDefined(entry?.team?.country, entry?.team?.teamNationality, "N/A"),
       points: Number(firstDefined(entry?.points, 0)),
-      wins: Number(firstDefined(entry?.wins, 0))
+      wins: Number(firstDefined(entry?.wins, 0)),
+      teamId: firstDefined(entry?.teamId, entry?.team?.teamId, null)
     }))
     .sort((a, b) => a.position - b.position);
 
@@ -102,13 +108,172 @@ function buildNfo(data) {
   ].join("\n");
 }
 
+function ensureModal() {
+  if (state.modal) return state.modal;
+
+  const overlay = document.createElement("div");
+  overlay.className = "race-modal standings-modal";
+  overlay.hidden = true;
+  overlay.innerHTML = `
+    <div class="race-modal-backdrop" data-close="true"></div>
+    <div class="race-modal-dialog standings-modal-dialog" role="dialog" aria-modal="true" aria-label="Standings details">
+      <button class="race-modal-close" type="button" aria-label="Close">X</button>
+      <div class="race-modal-body standings-modal-body"></div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const body = overlay.querySelector(".standings-modal-body");
+  const closeButton = overlay.querySelector(".race-modal-close");
+
+  function closeModal() {
+    overlay.hidden = true;
+    document.body.classList.remove("modal-open");
+  }
+
+  overlay.addEventListener("click", (event) => {
+    if (event.target instanceof HTMLElement && event.target.dataset.close === "true") {
+      closeModal();
+    }
+  });
+
+  closeButton.addEventListener("click", closeModal);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !overlay.hidden) {
+      closeModal();
+    }
+  });
+
+  state.modal = { overlay, body, closeModal };
+  return state.modal;
+}
+
+function buildInfoLine(label, value) {
+  if (value === null || value === undefined || value === "") return null;
+  const line = document.createElement("p");
+  line.className = "standings-detail-line";
+  line.innerHTML = `<span class="standings-detail-key">${label}:</span> ${value}`;
+  return line;
+}
+
+function renderDriverDetail(payload) {
+  const driver = Array.isArray(payload?.driver) ? payload.driver[0] : null;
+  if (!driver) throw new Error("Driver detail missing.");
+
+  const fragment = document.createDocumentFragment();
+  const title = document.createElement("p");
+  title.className = "panel-title";
+  title.textContent = `[ driver ] ${formatDriverName(driver)}`;
+  fragment.appendChild(title);
+
+  const lines = [
+    buildInfoLine("Nationality", firstDefined(driver.nationality, "N/A")),
+    buildInfoLine("Birthday", firstDefined(driver.birthday, "N/A")),
+    buildInfoLine("Number", firstDefined(driver.number, "N/A")),
+    buildInfoLine("Short Name", firstDefined(driver.shortName, "N/A")),
+    buildInfoLine("Driver ID", firstDefined(driver.driverId, "N/A"))
+  ].filter(Boolean);
+
+  for (const line of lines) fragment.appendChild(line);
+
+  if (driver.url) {
+    const link = document.createElement("a");
+    link.className = "standings-detail-link";
+    link.href = driver.url;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = "Open reference";
+    fragment.appendChild(link);
+  }
+
+  return fragment;
+}
+
+function renderTeamDetail(payload) {
+  const team = Array.isArray(payload?.team) ? payload.team[0] : null;
+  if (!team) throw new Error("Team detail missing.");
+
+  const fragment = document.createDocumentFragment();
+  const title = document.createElement("p");
+  title.className = "panel-title";
+  title.textContent = `[ constructor ] ${firstDefined(team.teamName, team.teamId, "N/A")}`;
+  fragment.appendChild(title);
+
+  const lines = [
+    buildInfoLine("Nationality", firstDefined(team.teamNationality, team.country, "N/A")),
+    buildInfoLine("First Appearance", firstDefined(team.firstAppeareance, team.firstAppareance, "N/A")),
+    buildInfoLine("Constructors Titles", firstDefined(team.constructorsChampionships, 0)),
+    buildInfoLine("Drivers Titles", firstDefined(team.driversChampionships, 0)),
+    buildInfoLine("Team ID", firstDefined(team.teamId, "N/A"))
+  ].filter(Boolean);
+
+  for (const line of lines) fragment.appendChild(line);
+
+  if (team.url) {
+    const link = document.createElement("a");
+    link.className = "standings-detail-link";
+    link.href = team.url;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    link.textContent = "Open reference";
+    fragment.appendChild(link);
+  }
+
+  return fragment;
+}
+
+async function openDetail(kind, id) {
+  if (!id) return;
+
+  const cacheKey = `${kind}:${id}`;
+  const { overlay, body } = ensureModal();
+  body.textContent = "Loading details...";
+  overlay.hidden = false;
+  document.body.classList.add("modal-open");
+
+  try {
+    let payload = state.detailCache.get(cacheKey);
+    if (!payload) {
+      payload = await fetchJson(`${API_BASE}/${kind}/${id}`);
+      state.detailCache.set(cacheKey, payload);
+    }
+
+    body.textContent = "";
+    body.appendChild(kind === "drivers" ? renderDriverDetail(payload) : renderTeamDetail(payload));
+  } catch (error) {
+    body.textContent = "";
+    const title = document.createElement("p");
+    title.className = "panel-title";
+    title.textContent = "[ detail error ]";
+    const line = document.createElement("p");
+    line.className = "standings-detail-line";
+    line.textContent = error.message;
+    body.append(title, line);
+  }
+}
+
 function renderPodium(data) {
   nodes.podiumGrid.textContent = "";
   const top3 = data.rows.slice(0, 3);
 
   for (const row of top3) {
     const card = document.createElement("article");
-    card.className = "podium-card";
+    card.className = "podium-card entity-card";
+    const detailKind = data.mode === "drivers" ? "drivers" : "teams";
+    const detailId = data.mode === "drivers" ? row.driverId : row.teamId;
+    if (detailId) {
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.addEventListener("click", () => openDetail(detailKind, detailId));
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openDetail(detailKind, detailId);
+        }
+      });
+    }
 
     const pos = document.createElement("p");
     pos.className = "podium-pos";
@@ -133,6 +298,19 @@ function renderTable(data) {
 
   for (const row of data.rows) {
     const tr = document.createElement("tr");
+    tr.className = "entity-row";
+    const detailKind = data.mode === "drivers" ? "drivers" : "teams";
+    const detailId = data.mode === "drivers" ? row.driverId : row.teamId;
+    if (detailId) {
+      tr.tabIndex = 0;
+      tr.addEventListener("click", () => openDetail(detailKind, detailId));
+      tr.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openDetail(detailKind, detailId);
+        }
+      });
+    }
     const gapText = row.position === 1 ? "-" : `-${row.gap}`;
 
     const values = [
@@ -206,6 +384,7 @@ async function fetchJson(url) {
 async function init() {
   startLocalClock();
   attachToggleEvents();
+  ensureModal();
 
   try {
     const [driversPayload, constructorsPayload] = await Promise.all([
